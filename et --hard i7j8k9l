@@ -1,0 +1,18 @@
+[33m1b0c0a0[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/main[m[33m)[m feat: Adiciona comando para criar planilha de tarefas
+[33m402dd2a[m feat: Implementa envio de arquivos Excel via WhatsApp
+[33mc7821cd[m feat: Atualiza bot para assistente de planilhas Excel
+[33m446ed38[m feat: Integra lógica do bot de Excel no app principal
+[33m776db95[m refactor: Unifica projeto e remove arquivos conflitantes
+[33m9709ab2[m fix: Remove servidor conflitante e credenciais expostas
+[33me9fc682[m refactor: Simplifica o bot para focar apenas no WhatsApp
+[33me6999b7[m feat: Adiciona agendador de posts em segundo plano
+[33ma928193[m feat: Adiciona autenticação do Google via variável de ambiente
+[33me9772be[m Transform: Assistente virtual de atendimento com funções Excel
+[33m87b0aa8[m Add WhatsApp webhook com Twilio
+[33m0b7136f[m Fix: Corrige caracteres de escape no bot_ia.py
+[33m332a62f[m Fix: Add requirements.txt and Procfile
+[33mcc45aac[m Add bot IA com nomes diferentes
+[33mca0360b[m Remove arquivos do agente e-commerce
+[33ma6fed63[m Deploy inicial agente e-commerce
+[33m128a922[m Add WhatsApp bot files
+[33m49ad1cb[m Deploy WhatsApp Bot
