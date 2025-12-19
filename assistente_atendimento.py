@@ -3,11 +3,13 @@ import io
 import base64
 from datetime import datetime
 import json
+from assistente_redes_sociais import AssistenteRedesSociais
 
 class AssistenteAtendimento:
     def __init__(self):
         self.atendimentos = []
         self.clientes = {}
+        self.redes_sociais = AssistenteRedesSociais()
         
     def processar_mensagem(self, mensagem):
         mensagem = mensagem.lower().strip()
