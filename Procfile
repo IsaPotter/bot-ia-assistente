@@ -1,1 +1,1 @@
-web: python whatsapp_meta.py
+web: gunicorn main:app
