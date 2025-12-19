@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify, render_template_string
 import os
 from bot_ia import BotIA
+from whatsapp_webhook import setup_whatsapp_routes
 
 app = Flask(__name__)
 bot = BotIA()
+setup_whatsapp_routes(app)
 
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
