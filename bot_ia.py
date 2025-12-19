@@ -37,9 +37,9 @@ class BotIA:
             return "🤖 Posso ajudar com: produtos, buscar, carrinho. O que precisa?"
     
     def listar_produtos(self):
-        resultado = "🛍️ **PRODUTOS DISPONÍVEIS**\\n\\n"
+        resultado = "🛍️ **PRODUTOS DISPONÍVEIS**\n\n"
         for id_produto, produto in self.produtos.items():
-            resultado += f"ID: {id_produto} - {produto['nome']} - R$ {produto['preco']:.2f}\\n"
+            resultado += f"ID: {id_produto} - {produto['nome']} - R$ {produto['preco']:.2f}\n"
         return resultado
     
     def buscar_produtos(self, termo):
@@ -52,7 +52,7 @@ class BotIA:
                 encontrados.append(f"ID: {id_produto} - {produto['nome']} - R$ {produto['preco']:.2f}")
         
         if encontrados:
-            return f"🔍 **Encontrado:**\\n" + "\\n".join(encontrados)
+            return f"🔍 **Encontrado:**\n" + "\n".join(encontrados)
         else:
             return f"❌ Nenhum produto encontrado para '{termo}'"
     
@@ -72,15 +72,15 @@ class BotIA:
         if not self.carrinho:
             return "🛒 Seu carrinho está vazio."
         
-        resultado = "🛒 **SEU CARRINHO**\\n\\n"
+        resultado = "🛒 **SEU CARRINHO**\n\n"
         total = 0
         for produto_id, quantidade in self.carrinho.items():
             produto = self.produtos[produto_id]
             subtotal = produto['preco'] * quantidade
             total += subtotal
-            resultado += f"• {produto['nome']} x{quantidade} - R$ {subtotal:.2f}\\n"
+            resultado += f"• {produto['nome']} x{quantidade} - R$ {subtotal:.2f}\n"
         
-        resultado += f"\\n💰 **TOTAL: R$ {total:.2f}**"
+        resultado += f"\n💰 **TOTAL: R$ {total:.2f}**"
         return resultado
     
     def extrair_termo_busca(self, mensagem):
@@ -92,5 +92,5 @@ class BotIA:
         return ""
     
     def extrair_id_produto(self, mensagem):
-        numeros = re.findall(r'\\d+', mensagem)
+        numeros = re.findall(r'\d+', mensagem)
         return numeros[0] if numeros else None
