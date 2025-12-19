@@ -3,8 +3,10 @@ import json
 import requests
 from flask import Flask, request, jsonify
 from datetime import datetime, timedelta
+import pandas as pd
+
 # Importa as funções que criamos para gerenciar a planilha
-import spreadsheet_manager as sm
+# import spreadsheet_manager as sm # Desativado para focar na lógica do Excel
 
 app = Flask(__name__)
 
@@ -20,8 +22,8 @@ if not all([ACCESS_TOKEN, VERIFY_TOKEN, PHONE_NUMBER_ID]):
     # Em um ambiente de produção real, você poderia fazer o app parar aqui.
     # exit(1)
 
-# Conecta-se à planilha ao iniciar o app
-planilha = sm.autenticar_e_abrir_planilha()
+# # Conecta-se à planilha ao iniciar o app (Desativado)
+# planilha = sm.autenticar_e_abrir_planilha()
 
 @app.route("/")
 def index():
@@ -55,47 +57,26 @@ def processar_mensagem_whatsapp(message):
     numero_usuario = message["from"]
     texto_mensagem = message["text"]["body"].lower()
     
-    print(f"💬 Mensagem recebida de {numero_usuario}: '{texto_mensagem}'")
-
-    # --- LÓGICA DO BOT ---
-    # Verifica se a mensagem é um comando para agendar post
-    if texto_mensagem.startswith("agendar"):
-        try:
-            # Exemplo de comando: "agendar instagram: Meu post de hoje para amanhã às 10:00"
-            partes = texto_mensagem.split(":", 1)
-            plataforma = partes[0].replace("agendar", "").strip()
-            texto_post = partes[1].strip()
-
-            # Tenta extrair data e hora da mensagem (lógica simplificada)
-            # Para uma solução robusta, seria necessário usar bibliotecas de NLP
-            data_agendamento = datetime.now() + timedelta(minutes=5) # Padrão: 5 min a partir de agora
-            if "amanhã" in texto_post:
-                data_agendamento = datetime.now() + timedelta(days=1)
-            
-            # Formata a data para a planilha
-            data_formatada = data_agendamento.strftime('%d/%m/%Y %H:%M')
-
-            post_info = {
-                "plataforma": plataforma,
-                "texto_do_post": texto_post,
-                "data_agendamento": data_formatada,
-            }
-
-            # Adiciona na planilha
-            if sm.adicionar_post_na_planilha(planilha, post_info):
-                resposta = f"✅ Agendado! Seu post para '{plataforma}' foi salvo."
-            else:
-                resposta = "❌ Ocorreu um erro ao salvar seu post na planilha."
-            
-            enviar_mensagem_whatsapp(numero_usuario, resposta)
-
-        except Exception as e:
-            print(f"Erro ao processar comando: {e}")
-            enviar_mensagem_whatsapp(numero_usuario, "❌ Comando inválido. Use o formato: `agendar <plataforma>: <texto>`")
+    print(f"💬 Mensagem recebida de {numero_usuario}: '{texto_mensagem}'")    
+    
+    # --- LÓGICA DO BOT DE EXCEL ---
+    # A lógica do WhatsAppExcelBot foi integrada aqui.
+    if "ola" in texto_mensagem or "oi" in texto_mensagem:
+        resposta = "🤖 Olá! Sou seu assistente de planilhas Excel!\n\nPosso ajudar com:\n📊 Criar planilhas de vendas, estoque, etc.\n\nDigite 'ajuda' para ver os comandos."
+    elif "vendas" in texto_mensagem:
+        resposta = criar_planilha_vendas(numero_usuario)
+    elif "estoque" in texto_mensagem:
+        resposta = criar_planilha_estoque(numero_usuario)
+    elif "financeiro" in texto_mensagem or "gastos" in texto_mensagem:
+        resposta = criar_planilha_financeiro(numero_usuario)
+    elif "clientes" in texto_mensagem:
+        resposta = criar_planilha_clientes(numero_usuario)
+    elif "ajuda" in texto_mensagem or "help" in texto_mensagem:
+        resposta = mostrar_ajuda()
     else:
-        # Resposta padrão se não for um comando conhecido
-        resposta_padrao = "Olá! Para agendar um post, envie: `agendar <plataforma>: <texto do post>`"
-        enviar_mensagem_whatsapp(numero_usuario, resposta_padrao)
+        resposta = "🤔 Não entendi. Digite 'ajuda' para ver os comandos disponíveis ou me diga que tipo de planilha precisa!"
+
+    enviar_mensagem_whatsapp(numero_usuario, resposta)
 
 def enviar_mensagem_whatsapp(destinatario, texto):
     """Envia uma mensagem de texto para um número no WhatsApp."""
@@ -115,6 +96,70 @@ def enviar_mensagem_whatsapp(destinatario, texto):
         print(f"✔️ Mensagem enviada para {destinatario}: '{texto}'")
     except requests.exceptions.RequestException as e:
         print(f"❌ Erro ao enviar mensagem: {e.response.text}")
+
+# --- FUNÇÕES DE CRIAÇÃO DE PLANILHAS (INTEGRADAS DO WhatsAppExcelBot) ---
+
+def criar_planilha_vendas(numero_usuario):
+    """Cria uma planilha de vendas e retorna uma mensagem de confirmação."""
+    try:
+        df = pd.DataFrame({
+            'Data': [datetime.now().strftime('%d/%m/%Y')], 'Vendedor': ['João Silva'], 'Cliente': ['Empresa A'],
+            'Produto': ['Produto X'], 'Quantidade': [5], 'Valor_Unitario': [50.0], 'Total': [250.0]
+        })
+        # Em um ambiente de servidor, não salvamos o arquivo, apenas confirmamos a estrutura.
+        # arquivo = f"vendas_{numero_usuario}.xlsx"
+        # df.to_excel(arquivo, index=False)
+        return f"📈 Planilha de Vendas criada!\n\n📊 Inclui:\n• Controle de vendedores\n• Produtos e quantidades\n• Total de vendas\n\nEm breve você poderá baixar o arquivo!"
+    except Exception as e:
+        return f"❌ Erro ao processar planilha de vendas: {str(e)}"
+
+def criar_planilha_estoque(numero_usuario):
+    """Cria uma planilha de estoque e retorna uma mensagem de confirmação."""
+    try:
+        df = pd.DataFrame({
+            'Codigo': ['001'], 'Produto': ['Notebook Dell'], 'Categoria': ['Informática'],
+            'Estoque_Atual': [15], 'Estoque_Minimo': [5], 'Status': ['OK']
+        })
+        return f"📦 Planilha de Estoque criada!\n\n📊 Controla:\n• Produtos e códigos\n• Estoque atual vs mínimo\n• Status automático\n\nEm breve você poderá baixar o arquivo!"
+    except Exception as e:
+        return f"❌ Erro ao processar planilha de estoque: {str(e)}"
+
+def criar_planilha_financeiro(numero_usuario):
+    """Cria uma planilha financeira e retorna uma mensagem de confirmação."""
+    try:
+        df = pd.DataFrame({
+            'Data': ['01/12/2024'], 'Tipo': ['Receita'], 'Categoria': ['Vendas'],
+            'Descricao': ['Venda produtos'], 'Valor': [5000.0], 'Saldo': [5000.0]
+        })
+        return f"💰 Planilha Financeira criada!\n\n📊 Controla:\n• Receitas e despesas\n• Categorização\n• Saldo acumulado\n\nEm breve você poderá baixar o arquivo!"
+    except Exception as e:
+        return f"❌ Erro ao processar planilha financeira: {str(e)}"
+
+def criar_planilha_clientes(numero_usuario):
+    """Cria uma planilha de clientes e retorna uma mensagem de confirmação."""
+    try:
+        df = pd.DataFrame({
+            'ID': [1], 'Nome': ['João Silva'], 'Email': ['joao@email.com'],
+            'Telefone': ['11999999999'], 'Status': ['Ativo']
+        })
+        return f"👥 Planilha de Clientes criada!\n\n📊 Organiza:\n• Dados completos dos clientes\n• Contatos e status\n\nEm breve você poderá baixar o arquivo!"
+    except Exception as e:
+        return f"❌ Erro ao processar planilha de clientes: {str(e)}"
+
+def mostrar_ajuda():
+    """Retorna a mensagem de ajuda com os comandos."""
+    return """📋 **COMANDOS DISPONÍVEIS:**
+
+📊 **CRIAR PLANILHAS:**
+• "vendas" - Para criar um modelo de controle de vendas.
+• "estoque" - Para criar um modelo de gestão de estoque.
+• "financeiro" - Para criar um modelo de controle financeiro.
+• "clientes" - Para criar um modelo de base de clientes.
+
+❓ **AJUDA:**
+• "ajuda" - Para ver este menu de comandos.
+
+Exemplo: Digite "vendas" para receber as instruções da planilha de vendas!"""
 
 if __name__ == "__main__":
     # A porta é definida pelo Render, então usamos a variável de ambiente PORT
