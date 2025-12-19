@@ -32,24 +32,77 @@ HTML_TEMPLATE = """
 <head>
     <title>Assistente de Planilhas IA</title>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f7f6; }
-        h1 { color: #333; }
-        .chat-container { border: 1px solid #ddd; height: 400px; overflow-y: scroll; padding: 10px; margin: 10px 0; background-color: #fff; border-radius: 8px; }
-        .message { margin: 10px 0; padding: 10px; border-radius: 8px; max-width: 80%; }
-        .user { background: #e1f5fe; text-align: right; margin-left: auto; }
-        .bot { background: #f1f8e9; }
+        :root {
+            --background-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-text-color: #e0e0e0;
+            --secondary-text-color: #b0b0b0;
+            --accent-color: #8A2BE2; /* Roxo azulado */
+            --user-bubble-color: #2a2a68;
+            --bot-bubble-color: #333333;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--primary-text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .main-container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 40px);
+        }
+        h1 {
+            color: var(--primary-text-color);
+            text-align: center;
+            background: linear-gradient(90deg, var(--accent-color), #4a90e2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .chat-container {
+            flex-grow: 1;
+            border: 1px solid #333;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: var(--surface-color);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 18px;
+            border-radius: 18px;
+            max-width: 80%;
+            line-height: 1.5;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .user { background-color: var(--user-bubble-color); margin-left: auto; border-bottom-right-radius: 4px; }
+        .bot { background-color: var(--bot-bubble-color); margin-right: auto; border-bottom-left-radius: 4px; }
         .input-container { display: flex; }
-        input[type="text"] { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 8px 0 0 8px; }
-        button { padding: 10px 20px; background: #0277bd; color: white; border: none; cursor: pointer; border-radius: 0 8px 8px 0; }
+        input[type="text"] {
+            flex-grow: 1; padding: 15px; border: 1px solid #444; border-radius: 25px;
+            background-color: var(--surface-color); color: var(--primary-text-color); font-size: 16px;
+        }
+        input[type="text"]:focus { outline: none; border-color: var(--accent-color); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
-    <h1>🤖 Assistente de Planilhas IA</h1>
-    <div id="chat" class="chat-container"></div>
-    <div class="input-container">
-        <input type="text" id="message" placeholder="Digite 'vendas', 'estoque', 'ajuda'..." onkeypress="if(event.key === 'Enter') sendMessage()">
-        <button onclick="sendMessage()">Enviar</button>
+    <div class="main-container">
+        <h1>🤖 Assistente de Planilhas IA</h1>
+        <div id="chat" class="chat-container"></div>
+        <div class="input-container">
+            <input type="text" id="message" placeholder="Digite 'vendas', 'estoque', 'ajuda'..." onkeypress="if(event.key === 'Enter') sendMessage()">
+        </div>
     </div>
     <script>
         function addMessage(text, isUser) {
