@@ -3,9 +3,6 @@ import json
 import requests
 from flask import Flask, request, jsonify
 from datetime import datetime, timedelta
-
-import threading
-import time
 # Importa as funções que criamos para gerenciar a planilha
 import spreadsheet_manager as sm
 
@@ -106,39 +103,7 @@ def enviar_mensagem_whatsapp(destinatario, texto):
     except requests.exceptions.RequestException as e:
         print(f"❌ Erro ao enviar mensagem: {e.response.text}")
 
-def agendador_de_posts():
-    """
-    Função que roda em segundo plano para verificar e publicar posts agendados.
-    """
-    print("🚀 Agendador de posts iniciado em segundo plano.")
-    while True:
-        try:
-            if planilha:
-                print(f"[{datetime.now().strftime('%H:%M:%S')}] 🔍 Verificando posts agendados...")
-                df_posts = sm.carregar_posts_agendados(planilha)
-                
-                if not df_posts.empty:
-                    posts_a_publicar = sm.encontrar_posts_para_publicar(df_posts)
-                    
-                    if posts_a_publicar:
-                        print(f"⚡ Encontrado(s) {len(posts_a_publicar)} post(s) para publicar!")
-                        for post in posts_a_publicar:
-                            # --- AQUI ENTRA A LÓGICA DE PUBLICAÇÃO REAL ---
-                            print(f"  >> PUBLICANDO no {post['plataforma']}: '{post['texto_do_post']}'")
-                            # ---------------------------------------------
-                            
-                            # Marca o post como publicado na planilha
-                            sm.marcar_como_publicado(planilha, post['texto_do_post'])
-        except Exception as e:
-            print(f"🚨 Erro no agendador: {e}")
-        
-        time.sleep(60) # Espera 60 segundos antes de verificar novamente
-
 if __name__ == "__main__":
-    # Inicia o agendador em uma thread separada
-    scheduler_thread = threading.Thread(target=agendador_de_posts, daemon=True)
-    scheduler_thread.start()
-    
     # A porta é definida pelo Render, então usamos a variável de ambiente PORT
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
