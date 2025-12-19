@@ -5,6 +5,7 @@ from flask import Flask, request, jsonify
 from datetime import datetime, timedelta
 import pandas as pd
 
+import io
 # Importa as funções que criamos para gerenciar a planilha
 # import spreadsheet_manager as sm # Desativado para focar na lógica do Excel
 
@@ -99,6 +100,56 @@ def enviar_mensagem_whatsapp(destinatario, texto):
     except requests.exceptions.RequestException as e:
         print(f"❌ Erro ao enviar mensagem: {e.response.text}")
 
+def upload_excel_para_whatsapp(df, nome_arquivo):
+    """
+    Converte um DataFrame para um arquivo Excel em memória e faz o upload para a API do WhatsApp.
+    Retorna o ID da mídia se o upload for bem-sucedido.
+    """
+    buffer = io.BytesIO()
+    df.to_excel(buffer, index=False, engine='openpyxl')
+    buffer.seek(0)
+
+    url = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/media"
+    headers = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
+    files = {
+        'file': (nome_arquivo, buffer, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+        'messaging_product': (None, 'whatsapp')
+    }
+
+    try:
+        response = requests.post(url, headers=headers, files=files)
+        response.raise_for_status()
+        media_id = response.json().get("id")
+        print(f"✅ Upload do arquivo '{nome_arquivo}' bem-sucedido. Media ID: {media_id}")
+        return media_id
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Erro no upload do arquivo para o WhatsApp: {e.response.text}")
+        return None
+
+def enviar_documento_whatsapp(destinatario, media_id, nome_arquivo, legenda=""):
+    """Envia um documento (usando media_id) para um número no WhatsApp."""
+    url = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
+    headers = {
+        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": destinatario,
+        "type": "document",
+        "document": {
+            "id": media_id,
+            "caption": legenda,
+            "filename": nome_arquivo
+        }
+    }
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        print(f"✔️ Documento enviado para {destinatario}.")
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Erro ao enviar documento: {e.response.text}")
+
 # --- FUNÇÕES DE CRIAÇÃO DE PLANILHAS (INTEGRADAS DO WhatsAppExcelBot) ---
 
 def criar_planilha_vendas(numero_usuario):
@@ -108,10 +159,13 @@ def criar_planilha_vendas(numero_usuario):
             'Data': [datetime.now().strftime('%d/%m/%Y')], 'Vendedor': ['João Silva'], 'Cliente': ['Empresa A'],
             'Produto': ['Produto X'], 'Quantidade': [5], 'Valor_Unitario': [50.0], 'Total': [250.0]
         })
-        # Em um ambiente de servidor, não salvamos o arquivo, apenas confirmamos a estrutura.
-        # arquivo = f"vendas_{numero_usuario}.xlsx"
-        # df.to_excel(arquivo, index=False)
-        return f"📈 Planilha de Vendas criada!\n\n📊 Inclui:\n• Controle de vendedores\n• Produtos e quantidades\n• Total de vendas\n\nEm breve você poderá baixar o arquivo!"
+        nome_arquivo = f"planilha_vendas_{datetime.now().strftime('%Y%m%d')}.xlsx"
+        media_id = upload_excel_para_whatsapp(df, nome_arquivo)
+        if media_id:
+            enviar_documento_whatsapp(numero_usuario, media_id, nome_arquivo, "Aqui está sua planilha de vendas!")
+            return "Enviei a planilha para você! ✅" # Retorna uma resposta de texto simples
+        else:
+            return "❌ Desculpe, não consegui gerar sua planilha de vendas no momento."
     except Exception as e:
         return f"❌ Erro ao processar planilha de vendas: {str(e)}"
 
@@ -122,7 +176,13 @@ def criar_planilha_estoque(numero_usuario):
             'Codigo': ['001'], 'Produto': ['Notebook Dell'], 'Categoria': ['Informática'],
             'Estoque_Atual': [15], 'Estoque_Minimo': [5], 'Status': ['OK']
         })
-        return f"📦 Planilha de Estoque criada!\n\n📊 Controla:\n• Produtos e códigos\n• Estoque atual vs mínimo\n• Status automático\n\nEm breve você poderá baixar o arquivo!"
+        nome_arquivo = f"planilha_estoque_{datetime.now().strftime('%Y%m%d')}.xlsx"
+        media_id = upload_excel_para_whatsapp(df, nome_arquivo)
+        if media_id:
+            enviar_documento_whatsapp(numero_usuario, media_id, nome_arquivo, "Aqui está sua planilha de controle de estoque!")
+            return "Enviei a planilha para você! ✅"
+        else:
+            return "❌ Desculpe, não consegui gerar sua planilha de estoque no momento."
     except Exception as e:
         return f"❌ Erro ao processar planilha de estoque: {str(e)}"
 
@@ -133,7 +193,13 @@ def criar_planilha_financeiro(numero_usuario):
             'Data': ['01/12/2024'], 'Tipo': ['Receita'], 'Categoria': ['Vendas'],
             'Descricao': ['Venda produtos'], 'Valor': [5000.0], 'Saldo': [5000.0]
         })
-        return f"💰 Planilha Financeira criada!\n\n📊 Controla:\n• Receitas e despesas\n• Categorização\n• Saldo acumulado\n\nEm breve você poderá baixar o arquivo!"
+        nome_arquivo = f"planilha_financeira_{datetime.now().strftime('%Y%m%d')}.xlsx"
+        media_id = upload_excel_para_whatsapp(df, nome_arquivo)
+        if media_id:
+            enviar_documento_whatsapp(numero_usuario, media_id, nome_arquivo, "Aqui está sua planilha de controle financeiro!")
+            return "Enviei a planilha para você! ✅"
+        else:
+            return "❌ Desculpe, não consegui gerar sua planilha financeira no momento."
     except Exception as e:
         return f"❌ Erro ao processar planilha financeira: {str(e)}"
 
@@ -144,7 +210,13 @@ def criar_planilha_clientes(numero_usuario):
             'ID': [1], 'Nome': ['João Silva'], 'Email': ['joao@email.com'],
             'Telefone': ['11999999999'], 'Status': ['Ativo']
         })
-        return f"👥 Planilha de Clientes criada!\n\n📊 Organiza:\n• Dados completos dos clientes\n• Contatos e status\n\nEm breve você poderá baixar o arquivo!"
+        nome_arquivo = f"planilha_clientes_{datetime.now().strftime('%Y%m%d')}.xlsx"
+        media_id = upload_excel_para_whatsapp(df, nome_arquivo)
+        if media_id:
+            enviar_documento_whatsapp(numero_usuario, media_id, nome_arquivo, "Aqui está sua planilha de clientes!")
+            return "Enviei a planilha para você! ✅"
+        else:
+            return "❌ Desculpe, não consegui gerar sua planilha de clientes no momento."
     except Exception as e:
         return f"❌ Erro ao processar planilha de clientes: {str(e)}"
 
