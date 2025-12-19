@@ -74,6 +74,8 @@ def processar_mensagem_whatsapp(message):
         resposta = criar_planilha_financeiro(numero_usuario)
     elif "clientes" in texto_mensagem:
         resposta = criar_planilha_clientes(numero_usuario)
+    elif "tarefas" in texto_mensagem:
+        resposta = criar_planilha_tarefas(numero_usuario)
     elif "ajuda" in texto_mensagem or "help" in texto_mensagem:
         resposta = mostrar_ajuda()
     else:
@@ -220,6 +222,26 @@ def criar_planilha_clientes(numero_usuario):
     except Exception as e:
         return f"❌ Erro ao processar planilha de clientes: {str(e)}"
 
+def criar_planilha_tarefas(numero_usuario):
+    """Cria uma planilha de tarefas e a envia para o usuário."""
+    try:
+        df = pd.DataFrame({
+            'Tarefa': ['Desenvolver novo recurso X', 'Corrigir bug na página de login', 'Reunião de alinhamento semanal'],
+            'Responsável': ['Ana', 'Carlos', 'Equipe'],
+            'Prazo': [(datetime.now() + timedelta(days=5)).strftime('%d/%m/%Y'), (datetime.now() + timedelta(days=2)).strftime('%d/%m/%Y'), (datetime.now() + timedelta(days=1)).strftime('%d/%m/%Y')],
+            'Status': ['A Fazer', 'Em Andamento', 'A Fazer'],
+            'Prioridade': ['Alta', 'Urgente', 'Média']
+        })
+        nome_arquivo = f"planilha_tarefas_{datetime.now().strftime('%Y%m%d')}.xlsx"
+        media_id = upload_excel_para_whatsapp(df, nome_arquivo)
+        if media_id:
+            enviar_documento_whatsapp(numero_usuario, media_id, nome_arquivo, "Aqui está sua planilha de gerenciamento de tarefas!")
+            return "Enviei a planilha de tarefas para você! ✅"
+        else:
+            return "❌ Desculpe, não consegui gerar sua planilha de tarefas no momento."
+    except Exception as e:
+        return f"❌ Erro ao processar planilha de tarefas: {str(e)}"
+
 def mostrar_ajuda():
     """Retorna a mensagem de ajuda com os comandos."""
     return """📋 **COMANDOS DISPONÍVEIS:**
@@ -229,6 +251,7 @@ def mostrar_ajuda():
 • "estoque" - Para criar um modelo de gestão de estoque.
 • "financeiro" - Para criar um modelo de controle financeiro.
 • "clientes" - Para criar um modelo de base de clientes.
+• "tarefas" - Para criar um modelo de gestão de tarefas.
 
 ❓ **AJUDA:**
 • "ajuda" - Para ver este menu de comandos.
