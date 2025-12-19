@@ -82,5 +82,9 @@ def health():
     return {'status': 'ok'}
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    # O servidor principal agora é 'app.py'.
+    # Este bloco foi desativado para evitar conflitos de servidor durante o deploy.
+    print("Este arquivo (main.py) foi desativado.")
+    print("O ponto de entrada da aplicação é 'app.py'.")
+    # port = int(os.environ.get('PORT', 5000))
+    # app.run(host='0.0.0.0', port=port)
