@@ -1,17 +1,17 @@
 from flask import Flask, request, jsonify, render_template_string
 import os
-from bot_ia import BotIA
+from assistente_atendimento import AssistenteAtendimento
 from whatsapp_webhook import setup_whatsapp_routes
 
 app = Flask(__name__)
-bot = BotIA()
+assistente = AssistenteAtendimento()
 setup_whatsapp_routes(app)
 
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Bot IA Assistente</title>
+    <title>Assistente Virtual de Atendimento</title>
     <meta charset="utf-8">
     <style>
         body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
@@ -24,7 +24,7 @@ HTML_TEMPLATE = '''
     </style>
 </head>
 <body>
-    <h1>🤖 Bot IA Assistente</h1>
+    <h1>👨‍💼 Assistente Virtual de Atendimento</h1>
     <div id="chat" class="chat-container"></div>
     <input type="text" id="message" placeholder="Digite sua mensagem...">
     <button onclick="sendMessage()">Enviar</button>
@@ -60,7 +60,7 @@ HTML_TEMPLATE = '''
             if (e.key === 'Enter') sendMessage();
         });
         
-        addMessage('🤖 Olá! Sou seu assistente IA. Como posso ajudar?', false);
+        addMessage('👋 Olá! Sou seu assistente virtual de atendimento. Digite "planilha" para ver as opções!', false);
     </script>
 </body>
 </html>
@@ -74,7 +74,7 @@ def home():
 def chat():
     data = request.get_json()
     message = data.get('message', '')
-    response = bot.processar_mensagem(message)
+    response = assistente.processar_mensagem(message)
     return jsonify({'response': response})
 
 @app.route('/health')
