@@ -12,9 +12,21 @@ app = Flask(__name__)
 # Carrega as variáveis de ambiente (você vai configurar isso no Render)
 ACCESS_TOKEN = os.environ.get("WHATSAPP_ACCESS_TOKEN")
 VERIFY_TOKEN = os.environ.get("WHATSAPP_VERIFY_TOKEN")
+PHONE_NUMBER_ID = os.environ.get("WHATSAPP_PHONE_NUMBER_ID")
+
+# Validação para garantir que os tokens foram configurados no ambiente do Render
+if not all([ACCESS_TOKEN, VERIFY_TOKEN, PHONE_NUMBER_ID]):
+    print("❌ ERRO: As variáveis de ambiente WHATSAPP_ACCESS_TOKEN, WHATSAPP_VERIFY_TOKEN e WHATSAPP_PHONE_NUMBER_ID devem ser configuradas.")
+    # Em um ambiente de produção real, você poderia fazer o app parar aqui.
+    # exit(1)
 
 # Conecta-se à planilha ao iniciar o app
 planilha = sm.autenticar_e_abrir_planilha()
+
+@app.route("/")
+def index():
+    """Página inicial para verificar se o bot está online."""
+    return "<h1>🤖 Seu assistente de WhatsApp está no ar!</h1><p>O webhook está configurado para receber eventos em /webhook.</p>"
 
 @app.route("/webhook", methods=["GET", "POST"])
 def webhook():
@@ -24,6 +36,7 @@ def webhook():
         if request.args.get("hub.verify_token") == VERIFY_TOKEN:
             return request.args.get("hub.challenge"), 200
         else:
+            print(f"❌ Falha na verificação do Webhook! Token recebido: '{request.args.get('hub.verify_token')}' | Token esperado: '{VERIFY_TOKEN}'")
             return "Erro de autenticação.", 403
 
     # Processa mensagens recebidas via POST
@@ -86,7 +99,7 @@ def processar_mensagem_whatsapp(message):
 
 def enviar_mensagem_whatsapp(destinatario, texto):
     """Envia uma mensagem de texto para um número no WhatsApp."""
-    url = f"https://graph.facebook.com/v18.0/me/messages" # Use a versão mais recente da API
+    url = f"https://graph.facebook.com/v18.0/{PHONE_NUMBER_ID}/messages"
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
         "Content-Type": "application/json",
