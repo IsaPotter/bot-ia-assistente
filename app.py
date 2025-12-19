@@ -43,6 +43,8 @@ def webhook():
 
     # Processa mensagens recebidas via POST
     data = request.get_json()
+    print(f"📥 Dados recebidos no webhook (POST): {json.dumps(data, indent=2)}") # Adicionado para depuração
+
     if data and "entry" in data:
         for entry in data["entry"]:
             for change in entry.get("changes", []):
